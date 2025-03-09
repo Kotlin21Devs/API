@@ -1,0 +1,65 @@
+# Laravel-specific files
+/vendor/
+!/.github/workflows/
+
+# Environment files
+.env
+.env.backup
+.env.*
+
+# Cache and logs
+/storage/*.key
+/storage/*.log
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Node and Composer dependencies
+/node_modules/
+/public/hot
+/public/storage
+/public/mix-manifest.json
+/public/css/*.map
+/public/js/*.map
+
+# Compiled assets
+/resources/assets/js/*.map
+/resources/assets/sass/*.map
+
+# IDE and OS files
+.idea/
+.vscode/
+*.swp
+*.DS_Store
+Thumbs.db
+
+# PHPUnit result cache
+.phpunit.result.cache
+
+# Ignoring .env files
+.env.*
+!.env.example
+
+# Ignoring artisan serve logs
+homestead.json
+homestead.yaml
+
+# Ignoring backup files
+*.bak
+*.backup
+
+# Ignoring Composer files
+composer.lock
+
+# Ignoring compiled files
+/public/css/app.css
+/public/js/app.js
+
+# Laravel Telescope and Horizon logs (if used)
+/storage/app/telescope/*
+/storage/app/horizon/*
+
+# Ignoring compiled blade files
+/storage/framework/views/*.php
