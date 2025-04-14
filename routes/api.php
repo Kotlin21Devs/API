@@ -1,31 +1,28 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CourseController;
-use App\Http\Controllers\QuizController;
-use App\Http\Controllers\LeaderboardController;
-use App\Http\Controllers\CertificateController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\LessonController;
+use App\Http\Controllers\MyCourseController;
+use App\Http\Controllers\ProgressController;
 
-// Route untuk autentikasi
+
+// Route untuk register & login
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Gunakan middleware auth:sanctum agar hanya user yang sudah login bisa logout
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-
-// Route untuk kursus
-Route::get('/courses', [CourseController::class, 'index']);
-Route::get('/courses/{id}', [CourseController::class, 'show']);
-
-// Route untuk kuis
+// Route yang memerlukan autentikasi dengan Sanctum
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/quizzes/{course_id}', [QuizController::class, 'getQuizzes']);
-    Route::post('/quizzes/submit', [QuizController::class, 'submitQuiz']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/courses', [CourseController::class, 'index']); // Menampilkan daftar kursus
+    Route::post('/enroll', [CourseController::class, 'enroll']); // Mendaftarkan kursus
+    Route::delete('/cancel-enrollment/{course_id}', [CourseController::class, 'cancelEnrollment']); // Membatalkan pendaftaran kursus
+    Route::get('/my-course', [MyCourseController::class, 'index']);
+    Route::get('/courses/{id}', [CourseController::class, 'show']);
+    Route::delete('/enroll/{course_id}', [EnrollmentController::class, 'unenroll']); // Membatalkan enroll
+    Route::post('/lesson/{lesson_id}/mark-complete', [LessonController::class, 'markComplete']); // Tandai pelajaran selesai
+    Route::get('/progress', [ProgressController::class, 'index']);
 });
-
-// Route untuk leaderboard (bisa diakses tanpa login)
-Route::get('/leaderboard', [LeaderboardController::class, 'index']);
-
-// Route untuk sertifikat, hanya user login yang bisa mengaksesnya
-Route::middleware('auth:sanctum')->get('/certificates/{user_id}', [CertificateController::class, 'getCertificates']);
