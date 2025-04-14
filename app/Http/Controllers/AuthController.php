@@ -3,82 +3,68 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use App\Models\User;
+
 
 class AuthController extends Controller
 {
-    // **REGISTER**
+    // 📌 REGISTER
     public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
-        ]);
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email',
+        'password' => 'required|string|min:6|confirmed',
+    ]);
 
-        // Cek apakah email sudah terdaftar
-        if (User::where('email', $request->email)->exists()) {
-            return response()->json([
-                'message' => 'Email sudah terdaftar! Gunakan email lain.'
-            ], 400);
-        }
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user' => $user
-        ], 201);
+    $existingUser = User::where('email', $request->email)->first();
+    if ($existingUser) {
+        return response()->json(['message' => 'Email sudah terdaftar!'], 409);
     }
 
-    // **LOGIN**
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+    ]);
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Register berhasil',
+        'token' => $token,
+        'user' => $user
+    ], 201); // Status code 201 Created
+}
+
+    // 📌 LOGIN
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
+            'email' => 'required|string|email',
+            'password' => 'required|string',
         ]);
 
         if (!Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.']
-            ]);
+            return response()->json(['message' => 'Email atau password salah!'], 401);
         }
 
         $user = Auth::user();
-
-        // Pastikan method createToken tersedia
-        if (!method_exists($user, 'createToken')) {
-            return response()->json([
-                'message' => 'Token creation failed. Sanctum might not be installed correctly.'
-            ], 500);
-        }
-
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login successful',
-            'user' => $user,
-            'token' => $token
-        ], 200);
+            'message' => 'Login berhasil!',
+            'token' => $token,
+            'user' => $user
+        ]);
     }
 
-    // **LOGOUT**
+    // 📌 LOGOUT
     public function logout(Request $request)
     {
-        if ($request->user()) {
-            $request->user()->tokens()->delete();
-        }
-
-        return response()->json([
-            'message' => 'Logout successful'
-        ]);
+        $request->user()->tokens()->delete();
+        return response()->json(['message' => 'Logout berhasil!']);
     }
 }
