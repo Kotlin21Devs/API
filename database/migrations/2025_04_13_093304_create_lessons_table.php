@@ -13,6 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('module_id');
             $table->string('title');
             $table->text('content')->nullable();
+            $table->integer('order')->nullable();  // Menambahkan kolom 'order'
             $table->timestamps();
 
             $table->foreign('module_id')
