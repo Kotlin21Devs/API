@@ -15,6 +15,7 @@ class CourseController extends Controller
     {
         $user = $request->user();
         $search = $request->query('search');
+        $category = $request->query('category');
 
         $query = Course::query();
 
@@ -23,6 +24,10 @@ class CourseController extends Controller
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%");
             });
+        }
+
+        if ($category) {
+            $query->where('category', $category);
         }
 
         $courses = $query->with('modules.lessons')->get();
@@ -53,6 +58,7 @@ class CourseController extends Controller
                 'description' => $course->description,
                 'thumbnail_url' => $course->thumbnail_url,
                 'rating' => $course->rating,
+                'category' => $course->category,
                 'is_enrolled' => $enrolledCourseIds->contains($course->id),
                 'progress' => $enrolledCourseIds->contains($course->id) ? ($progressMap[$course->id] ?? 0) : null,
             ];
@@ -161,6 +167,7 @@ class CourseController extends Controller
         return response()->json(['message' => 'Pendaftaran kursus dibatalkan.']);
     }
 
+    // Menampilkan detail kursus
     public function show($id)
     {
         $course = Course::with('modules.lessons')->findOrFail($id);
@@ -170,6 +177,7 @@ class CourseController extends Controller
             'title' => $course->title,
             'description' => $course->description,
             'thumbnail_url' => $course->thumbnail_url, // Menambahkan thumbnail
+            'category' => $course->category, // Menambahkan kategori
             'modules' => $course->modules->map(function ($module) {
                 return [
                     'id' => $module->id,
