@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Course;
+use App\Models\Lesson;
+use App\Models\LessonProgress;
 
 class Enrollment extends Model
 {
@@ -16,5 +19,10 @@ class Enrollment extends Model
     public function lessons()
     {
         return $this->belongsToMany(Lesson::class)->withTimestamps();
+    }
+
+    public function lessonProgresses()
+    {
+        return $this->hasMany(LessonProgress::class);
     }
 }

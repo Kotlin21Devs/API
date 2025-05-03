@@ -5,38 +5,66 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Enrollment;
-use App\Models\LessonProgress;
 
 class ProgressController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        $enrollments = Enrollment::with(['course.modules.lessons', 'lessonProgresses.lesson'])
-            ->where('user_id', $user->id)
-            ->get();
+            if (!$user) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
 
-        $progressList = $enrollments->map(function ($enrollment) {
-            $allLessons = $enrollment->course->modules->flatMap->lessons;
-            $totalLessons = $allLessons->count();
+            $enrollments = Enrollment::with([
+                'course.modules.lessons',
+                'lessonProgresses.lesson'
+            ])->where('user_id', $user->id)->get();
 
-            $completedLessonIds = $enrollment->lessonProgresses->pluck('lesson_id')->toArray();
-            $completedLessons = $allLessons->whereIn('id', $completedLessonIds);
+            $progressList = $enrollments->map(function ($enrollment) {
+                $course = $enrollment->course;
 
-            $lastLesson = $enrollment->lessonProgresses
-                ->sortByDesc('updated_at')
-                ->first();
+                // Skip jika course tidak tersedia
+                if (!$course) return null;
 
-            return [
-                'course_id'    => $enrollment->course->id,
-                'course_title' => $enrollment->course->title,
-                'progress'     => $totalLessons > 0 ? round(count($completedLessons) / $totalLessons, 2) : 0,
-                'last_lesson'  => $lastLesson?->lesson?->title ?? null,
-                'updated_at'   => $lastLesson?->updated_at,
-            ];
-        });
+                $modules = $course->modules ?? collect();
 
-        return response()->json($progressList);
+                $allLessons = $modules->flatMap(function ($module) {
+                    return $module->lessons ?? collect();
+                });
+
+                $totalLessons = $allLessons->count();
+
+                // Dapatkan ID lesson yang sudah selesai
+                $completedLessonIds = $enrollment->lessonProgresses->pluck('lesson_id')->toArray();
+                $completedLessons = $allLessons->whereIn('id', $completedLessonIds);
+
+                // Ambil last lesson yang paling baru diakses
+                $lastLessonProgress = $enrollment->lessonProgresses
+                    ->sortByDesc('updated_at')
+                    ->first();
+
+                return [
+                    'course_id'    => $course->id,
+                    'course_title' => $course->title,
+                    'progress'     => $totalLessons > 0 ? round($completedLessons->count() / $totalLessons, 2) : 0,
+                    'last_lesson'  => optional(optional($lastLessonProgress)->lesson)->title,
+                    'updated_at'   => optional($lastLessonProgress)->updated_at,
+                ];
+            })->filter()->values(); // buang null dan reset index
+
+            return response()->json($progressList);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
     }
 }

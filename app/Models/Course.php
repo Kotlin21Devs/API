@@ -11,4 +11,10 @@ class Course extends Model
         'description',
         'category',
     ];
+
+    // ✅ Tambahkan ini
+    public function modules()
+    {
+        return $this->hasMany(Module::class);
+    }
 }
