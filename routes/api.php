@@ -18,8 +18,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/courses', [CourseController::class, 'index']); // Menampilkan daftar kursus
-    Route::post('/enroll', [CourseController::class, 'enroll']); // Mendaftarkan kursus
-    Route::delete('/cancel-enrollment/{course_id}', [CourseController::class, 'cancelEnrollment']); // Membatalkan pendaftaran kursus
+     Route::post('/enroll/{course_id}', [EnrollmentController::class, 'enroll']); 
+    Route::delete('/enroll/{course_id}', [EnrollmentController::class, 'unenroll']); 
     Route::get('/my-course', [MyCourseController::class, 'index']);
     Route::get('/courses/{id}', [CourseController::class, 'show']);
     Route::delete('/enroll/{course_id}', [EnrollmentController::class, 'unenroll']); // Membatalkan enroll
