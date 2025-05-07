@@ -33,32 +33,52 @@ class MyCourseController extends Controller
             $progressMap[$course->id] = $totalLessons > 0 ? round($completedLessons / $totalLessons, 2) : 0;
         }
 
-        // Mendapatkan kursus dengan progress terbaru
-        $latestProgress = LessonProgress::with(['lesson.module.course'])
-            ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->first();
+        // Menyiapkan response kursus dan materi
+        $response = [];
+        foreach ($courses as $course) {
+            // Ambil materi pertama (lesson pertama)
+            $lesson = $course->modules->flatMap->lessons->first();
+            $module = $lesson ? $lesson->module : null;
 
-        if (!$latestProgress) {
-            return response()->json([
-                'message' => 'Belum ada progress belajar',
-            ], 404);
+            // Menyiapkan nama file gambar berdasarkan ID kursus
+            $thumbnailFilename = 'gambar' . $course->id . '.jpg';
+            $thumbnailPath = public_path('images/thumbnails/' . $thumbnailFilename);
+
+            // Memeriksa apakah gambar ada
+            $thumbnailUrl = file_exists($thumbnailPath)
+                ? asset('images/thumbnails/' . $thumbnailFilename)
+                : asset('images/thumbnails/default.jpg');
+
+            // Menambahkan data kursus ke dalam response
+            $response[] = [
+                'id' => $course->id,
+                'title' => $course->title,
+                'progress' => $progressMap[$course->id] ?? 0,
+                'next_lesson' => $lesson ? [
+                    'title' => $lesson->title,
+                    'module' => $module ? $module->title : null,
+                ] : null,
+                'thumbnail_url' => $thumbnailUrl,
+                'is_enrolled' => $enrolledCourseIds->contains($course->id),
+
+                // ✅ Menyertakan modul dan lesson secara lengkap
+                'modules' => $course->modules->map(function ($module) {
+                    return [
+                        'id' => $module->id,
+                        'title' => $module->title,
+                        'content' => $module->content,
+                        'lessons' => $module->lessons->map(function ($lesson) {
+                            return [
+                                'id' => $lesson->id,
+                                'title' => $lesson->title,
+                                'content' => $lesson->content,
+                            ];
+                        }),
+                    ];
+                }),
+            ];
         }
 
-        $lesson = $latestProgress->lesson;
-        $module = $lesson->module;
-        $course = $module->course;
-
-        return response()->json([
-            'id' => $course->id,
-            'title' => $course->title,
-            'progress' => $progressMap[$course->id] ?? 0,  // Menggunakan progress yang dihitung
-            'next_lesson' => [
-                'title' => $lesson->title,
-                'module' => $module->title,
-            ],
-            'thumbnail_url' => $course->thumbnail_url,
-            'is_enrolled' => $enrolledCourseIds->contains($course->id), // Menambahkan status enrollment
-        ]);
+        return response()->json($response);
     }
 }
