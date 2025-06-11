@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -8,7 +9,6 @@ class ModuleSeeder extends Seeder
 {
     public function run()
     {
-        // Menambahkan 'content' dengan nilai default kosong
         Module::create([
             'course_id' => 1,
             'title' => 'Basic Programming',
@@ -25,6 +25,24 @@ class ModuleSeeder extends Seeder
             'course_id' => 3,
             'title' => 'Python for Data Science',
             'content' => 'This module is focused on using Python for Data Science applications.',
+        ]);
+
+        Module::create([
+            'course_id' => 1,
+            'title' => 'Object-Oriented Programming',
+            'content' => 'Learn about classes, objects, inheritance, and more in OOP.',
+        ]);
+
+        Module::create([
+            'course_id' => 2,
+            'title' => 'Frontend Development Basics',
+            'content' => 'Covers HTML, CSS, and the foundations of responsive design.',
+        ]);
+
+        Module::create([
+            'course_id' => 3,
+            'title' => 'Database Fundamentals',
+            'content' => 'Introduction to relational databases, SQL, and database design.',
         ]);
     }
 }
