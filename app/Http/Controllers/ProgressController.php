@@ -49,13 +49,14 @@ class ProgressController extends Controller
                     ->first();
 
                 return [
-                    'course_id'    => $course->id,
-                    'course_title' => $course->title,
-                    'progress'     => $totalLessons > 0 ? round($completedLessons->count() / $totalLessons, 2) : 0,
-                    'last_lesson'  => optional(optional($lastLessonProgress)->lesson)->title,
-                    'updated_at'   => optional($lastLessonProgress)->updated_at,
+                    'course_id'           => $course->id,
+                    'course_title'        => $course->title,
+                    'course_description'  => $course->description, // Tambahkan deskripsi kursus
+                    'progress'            => $totalLessons > 0 ? round($completedLessons->count() / $totalLessons, 2) : 0,
+                    'last_lesson'         => optional(optional($lastLessonProgress)->lesson)->title,
+                    'updated_at'          => optional($lastLessonProgress)->updated_at,
                 ];
-            })->filter()->values(); // buang null dan reset index
+            })->filter()->values(); // Buang null dan reset index
 
             return response()->json($progressList);
         } catch (\Throwable $e) {
