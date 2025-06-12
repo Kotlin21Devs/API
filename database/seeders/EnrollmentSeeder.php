@@ -3,48 +3,41 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Enrollment;
-use App\Models\Course;
 use App\Models\User;
+use App\Models\Course;
+use App\Models\Enrollment;
 use Carbon\Carbon;
 
 class EnrollmentSeeder extends Seeder
 {
     public function run()
     {
-        // Ambil kursus berdasarkan title yang ada di CourseSeeder
-        $course1 = Course::where('title', 'Intro to Programming')->first();
-        $course2 = Course::where('title', 'Advanced Web Development')->first();
-        $course3 = Course::where('title', 'Data Science with Python')->first();
-        $course4 = Course::where('title', 'Expert Level AI')->first();
+        $user1 = User::where('email', 'dummy@example.com')->first();
+        $user2 = User::where('email', 'test@example.com')->first();
 
-        // Ambil user untuk di-enroll
-        $user1 = User::find(1); // Pastikan user dengan ID 1 ada
-        $user2 = User::find(2); // Pastikan user dengan ID 2 ada
+        $course1 = Course::where('title', 'Pemrograman Dasar dengan Python')->first();
+        $course2 = Course::where('title', 'JavaScript Lanjutan')->first();
 
-        // Enroll user ke kursus yang relevan
-        Enrollment::create([
-            'user_id' => $user1->id,
-            'course_id' => $course1->id,
-            'enrolled_at' => Carbon::now(),
-        ]);
+        if ($user1 && $course1) {
+            Enrollment::create([
+                'user_id' => $user1->id,
+                'course_id' => $course1->id,
+                'enrolled_at' => Carbon::now(),
+            ]);
+            echo "✅ Enrolled: {$user1->email} → {$course1->title}\n";
+        } else {
+            echo "❌ Enrollment gagal untuk user1 atau course1\n";
+        }
 
-        Enrollment::create([
-            'user_id' => $user1->id,
-            'course_id' => $course2->id,
-            'enrolled_at' => Carbon::now()->subDays(2),
-        ]);
-
-        Enrollment::create([
-            'user_id' => $user2->id,
-            'course_id' => $course3->id,
-            'enrolled_at' => Carbon::now()->subDay(),
-        ]);
-
-        Enrollment::create([
-            'user_id' => $user2->id,
-            'course_id' => $course4->id,
-            'enrolled_at' => Carbon::now()->subDays(3),
-        ]);
+        if ($user2 && $course2) {
+            Enrollment::create([
+                'user_id' => $user2->id,
+                'course_id' => $course2->id,
+                'enrolled_at' => Carbon::now(),
+            ]);
+            echo "✅ Enrolled: {$user2->email} → {$course2->title}\n";
+        } else {
+            echo "❌ Enrollment gagal untuk user2 atau course2\n";
+        }
     }
 }

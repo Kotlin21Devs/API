@@ -10,27 +10,22 @@ class CourseSeeder extends Seeder
     public function run()
     {
         Course::create([
-            'title' => 'Intro to Programming',
-            'description' => 'Learn the basics of programming in various languages.',
+            'title' => 'Pemrograman Dasar dengan Python',
             'category' => 'Basic',
+            'description' => 'Kursus ini memperkenalkan dasar-dasar pemrograman menggunakan Python, mencakup variabel, struktur kontrol, fungsi, dan pemrograman berorientasi objek. Cocok untuk pemula yang ingin memahami logika pemrograman.',
         ]);
-
+        
         Course::create([
-            'title' => 'Advanced Web Development',
-            'description' => 'Learn advanced web development techniques using modern frameworks.',
+            'title' => 'JavaScript Lanjutan',
             'category' => 'Advanced',
+            'description' => 'Pelajari konsep lanjutan JavaScript seperti asynchronous programming, closures, dan modularitas. Kursus ini dirancang untuk pengembang yang ingin meningkatkan keahlian front-end dan back-end.',
         ]);
-
+        
         Course::create([
-            'title' => 'Data Science with Python',
-            'description' => 'An introduction to data science and machine learning using Python.',
+            'title' => 'Data Science dengan Python',
             'category' => 'Intermediate',
+            'description' => 'Kursus ini mengajarkan penggunaan Python untuk analisis data, termasuk Pandas, NumPy, dan visualisasi data dengan Matplotlib. Ideal untuk mereka yang ingin masuk ke bidang data science.',
         ]);
-
-        Course::create([
-            'title' => 'Expert Level AI',
-            'description' => 'Master artificial intelligence concepts and applications.',
-            'category' => 'Expert',
-        ]);
+        
     }
 }
