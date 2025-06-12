@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Lesson;
 use App\Models\Module;
+use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,22 +13,40 @@ class LessonController extends Controller
 {
     public function index()
     {
-        // Ambil semua lesson tanpa memandang kursus
-        $lessons = Lesson::with('module.course')->orderBy('order')->get();
+        // Ambil semua course dengan module dan lesson-nya
+        $courses = Course::with(['modules' => function ($query) {
+            $query->orderBy('order')->with(['lessons' => function ($query) {
+                $query->orderBy('order');
+            }]);
+        }])->get();
 
         return response()->json([
             'message' => 'Semua pelajaran berhasil diambil.',
-            'lessons' => $lessons->map(function ($lesson) {
+            'courses' => $courses->map(function ($course) {
                 return [
-                    'id' => $lesson->id,
-                    'title' => $lesson->title,
-                    'content' => $lesson->content,
-                    'order' => $lesson->order,
-                    'module_id' => $lesson->module_id,
-                    'course' => [
-                        'id' => $lesson->module->course->id ?? null,
-                        'title' => $lesson->module->course->title ?? null,
-                    ]
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'category' => $course->category,
+                    'description' => $course->description,
+                    'modules' => $course->modules->map(function ($module) {
+                        return [
+                            'id' => $module->id,
+                            'course_id' => $module->course_id,
+                            'title' => $module->title,
+                            'content' => $module->content,
+                            'order' => $module->order ?? 0,
+                            'lessons' => $module->lessons->map(function ($lesson) {
+                                return [
+                                    'id' => $lesson->id,
+                                    'course_id' => $lesson->course_id ?? $lesson->module->course_id,
+                                    'module_id' => $lesson->module_id,
+                                    'title' => $lesson->title,
+                                    'content' => $lesson->content,
+                                    'order' => $lesson->order,
+                                ];
+                            }),
+                        ];
+                    }),
                 ];
             }),
         ]);
@@ -35,26 +54,44 @@ class LessonController extends Controller
 
     public function byCourse($courseId)
     {
-        // Ambil semua lesson dari course tertentu
-        $lessons = Lesson::whereHas('module', function ($query) use ($courseId) {
-            $query->where('course_id', $courseId);
-        })->with('module')->orderBy('order')->get();
+        // Pastikan course ada
+        $course = Course::with(['modules' => function ($query) {
+            $query->orderBy('order')->with(['lessons' => function ($query) {
+                $query->orderBy('order');
+            }]);
+        }])->findOrFail($courseId);
 
         return response()->json([
             'message' => 'Pelajaran dari kursus berhasil diambil.',
-            'course_id' => $courseId,
-            'lessons' => $lessons->map(function ($lesson) {
+            'course' => [
+                'id' => $course->id,
+                'title' => $course->title,
+                'category' => $course->category,
+                'description' => $course->description,
+            ],
+            'modules' => $course->modules->map(function ($module) {
                 return [
-                    'id' => $lesson->id,
-                    'title' => $lesson->title,
-                    'content' => $lesson->content,
-                    'order' => $lesson->order,
-                    'module_id' => $lesson->module_id,
+                    'id' => $module->id,
+                    'course_id' => $module->course_id,
+                    'title' => $module->title,
+                    'content' => $module->content,
+                    'order' => $module->order ?? 0,
+                    'lessons' => $module->lessons->map(function ($lesson) {
+                        return [
+                            'id' => $lesson->id,
+                            'course_id' => $lesson->course_id ?? $lesson->module->course_id,
+                            'module_id' => $lesson->module_id,
+                            'title' => $lesson->title,
+                            'content' => $lesson->content,
+                            'order' => $lesson->order,
+                        ];
+                    }),
                 ];
             }),
         ]);
     }
 
+    // Method markComplete dan show tetap sama
     public function markComplete($lessonId)
     {
         $user = Auth::user();
@@ -110,32 +147,46 @@ class LessonController extends Controller
             ], 403);
         }
 
-        $allLessons = Lesson::whereHas('module', function ($query) use ($course) {
-            $query->where('course_id', $course->id);
-        })->orderBy('order')->get();
+        $modules = Module::where('course_id', $course->id)
+            ->with(['lessons' => function ($query) {
+                $query->orderBy('order');
+            }])
+            ->orderBy('order')
+            ->get();
 
         return response()->json([
             'message' => 'Data pelajaran berhasil diambil.',
-            'current_lesson' => [
-                'id' => $lesson->id,
-                'module_id' => $lesson->module_id,
-                'title' => $lesson->title,
-                'content' => $lesson->content,
-                'order' => $lesson->order,
-            ],
             'course' => [
                 'id' => $course->id,
                 'title' => $course->title,
                 'category' => $course->category,
                 'description' => $course->description,
             ],
-            'lessons_in_course' => $allLessons->map(function ($l) {
+            'current_lesson' => [
+                'id' => $lesson->id,
+                'course_id' => $lesson->course_id ?? $course->id,
+                'module_id' => $lesson->module_id,
+                'title' => $lesson->title,
+                'content' => $lesson->content,
+                'order' => $lesson->order,
+            ],
+            'modules' => $modules->map(function ($module) {
                 return [
-                    'id' => $l->id,
-                    'module_id' => $l->module_id,
-                    'title' => $l->title,
-                    'content' => $l->content,
-                    'order' => $l->order,
+                    'id' => $module->id,
+                    'course_id' => $module->course_id,
+                    'title' => $module->title,
+                    'content' => $module->content,
+                    'order' => $module->order ?? 0,
+                    'lessons' => $module->lessons->map(function ($l) {
+                        return [
+                            'id' => $l->id,
+                            'course_id' => $l->course_id ?? $l->module->course_id,
+                            'module_id' => $l->module_id,
+                            'title' => $l->title,
+                            'content' => $l->content,
+                            'order' => $l->order,
+                        ];
+                    }),
                 ];
             }),
         ]);

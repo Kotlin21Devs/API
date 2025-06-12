@@ -9,24 +9,33 @@ use App\Http\Controllers\LessonController;
 use App\Http\Controllers\MyCourseController;
 use App\Http\Controllers\ProgressController;
 
-
-// Route untuk register & login
+// Route untuk register & login (tanpa autentikasi)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // Route yang memerlukan autentikasi dengan Sanctum
 Route::middleware('auth:sanctum')->group(function () {
+    // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/courses', [CourseController::class, 'index']); // Menampilkan daftar kursus
-     Route::post('/enroll/{course_id}', [EnrollmentController::class, 'enroll']); 
-    Route::delete('/enroll/{course_id}', [EnrollmentController::class, 'unenroll']); 
-    Route::get('/my-course', [MyCourseController::class, 'index']);
-    Route::get('/courses/{id}', [CourseController::class, 'show']);
-    Route::delete('/enroll/{course_id}', [EnrollmentController::class, 'unenroll']); // Membatalkan enroll
     Route::put('/auth/user', [AuthController::class, 'updatePassword']);
-    
-Route::get('/lesson', [LessonController::class, 'index']);
-    Route::post('/lesson/{lesson_id}/mark-complete', [LessonController::class, 'markComplete']); // Tandai pelajaran selesai
-    Route::get('/lesson/{lesson_id}', [LessonController::class, 'show']); // Menampilkan detail pelajaran
-    Route::get('/progress', [ProgressController::class, 'index']);
+
+    // Courses
+    Route::get('/courses', [CourseController::class, 'index']); // Daftar semua kursus
+    Route::get('/courses/{id}', [CourseController::class, 'show']); // Detail kursus
+
+    // Enrollment
+    Route::post('/enroll/{course_id}', [EnrollmentController::class, 'enroll']); // Enroll ke kursus
+    Route::delete('/enroll/{course_id}', [EnrollmentController::class, 'unenroll']); // Batalkan enroll
+
+    // My Courses
+    Route::get('/my-courses', [MyCourseController::class, 'index']); // Daftar kursus yang diikuti
+
+    // Lessons
+    Route::get('/lessons', [LessonController::class, 'index']); // Daftar semua lesson (dikelompokkan per course)
+    Route::get('/courses/{course_id}/lessons', [LessonController::class, 'byCourse']); // Daftar lesson untuk course tertentu
+    Route::get('/lessons/{lesson_id}', [LessonController::class, 'show']); // Detail lesson
+    Route::post('/lessons/{lesson_id}/mark-complete', [LessonController::class, 'markComplete']); // Tandai lesson selesai
+
+    // Progress
+    Route::get('/progress', [ProgressController::class, 'index']); // Progres user
 });
