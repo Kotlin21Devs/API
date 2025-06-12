@@ -34,14 +34,14 @@ class AuthController extends Controller
 
         // Membuat token dengan masa berlaku satu bulan
         $token = $user->createToken('auth_token', ['*'], Carbon::now()->addMonth())->plainTextToken;
-        $expiresAt = Carbon::now()->addMonth(); // Menentukan tanggal kedaluwarsa token
+        $expiresAt = Carbon::now()->addMonth();
 
         return response()->json([
             'message' => 'Register berhasil',
             'token' => $token,
-            'expires_at' => $expiresAt->toDateTimeString(), // Mengirimkan tanggal kedaluwarsa
+            'expires_at' => $expiresAt->toDateTimeString(),
             'user' => $user
-        ], 201); // Status code 201 Created
+        ], 201);
     }
 
     // 📌 LOGIN
@@ -52,25 +52,21 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Cek apakah email dan password valid
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json(['message' => 'Email atau password salah!'], 401);
         }
 
         $user = Auth::user();
-        
-        // Mendapatkan waktu login
         $loginAt = Carbon::now();
 
-        // Membuat token dengan masa berlaku satu bulan
         $token = $user->createToken('auth_token', ['*'], Carbon::now()->addMonth())->plainTextToken;
-        $expiresAt = Carbon::now()->addMonth(); // Menentukan tanggal kedaluwarsa token
+        $expiresAt = Carbon::now()->addMonth();
 
         return response()->json([
             'message' => 'Login berhasil!',
             'token' => $token,
-            'expires_at' => $expiresAt->toDateTimeString(), // Mengirimkan tanggal kedaluwarsa
-            'login_at' => $loginAt->toDateTimeString(), // Mengirimkan waktu login
+            'expires_at' => $expiresAt->toDateTimeString(),
+            'login_at' => $loginAt->toDateTimeString(),
             'user' => $user
         ]);
     }
@@ -78,8 +74,36 @@ class AuthController extends Controller
     // 📌 LOGOUT
     public function logout(Request $request)
     {
-        // Hapus semua token untuk pengguna saat ini
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logout berhasil!']);
+    }
+
+    // 📌 UPDATE PASSWORD
+    public function updatePassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'current_password' => 'required|string',
+                'new_password' => 'required|string|min:6|confirmed',
+            ]);
+
+            $user = $request->user();
+
+            // Validasi password lama
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json(['message' => 'Password lama salah!'], 403);
+            }
+
+            // Update password baru
+            $user->password = Hash::make($request->new_password);
+            $user->save();
+
+            return response()->json(['message' => 'Password berhasil diperbarui!']);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan!',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
