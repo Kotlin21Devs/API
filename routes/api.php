@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-course', [MyCourseController::class, 'index']);
     Route::get('/courses/{id}', [CourseController::class, 'show']);
     Route::delete('/enroll/{course_id}', [EnrollmentController::class, 'unenroll']); // Membatalkan enroll
+    Route::put('/auth/user', [AuthController::class, 'updatePassword']);
     
 Route::get('/lesson', [LessonController::class, 'index']);
     Route::post('/lesson/{lesson_id}/mark-complete', [LessonController::class, 'markComplete']); // Tandai pelajaran selesai
