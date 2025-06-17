@@ -8,6 +8,7 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\MyCourseController;
 use App\Http\Controllers\ProgressController;
+use App\Http\Controllers\QuizController;
 
 // Route untuk register & login (tanpa autentikasi)
 Route::post('/register', [AuthController::class, 'register']);
@@ -38,4 +39,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Progress
     Route::get('/progress', [ProgressController::class, 'index']); // Progres user
+
+    // Quiz Routes
+    Route::get('/courses/{course_id}/quizzes', [QuizController::class, 'index']); // Daftar kuis untuk kursus tertentu
+    Route::post('/quizzes', [QuizController::class, 'store']); // Buat kuis baru
+    Route::get('/quizzes/{id}', [QuizController::class, 'show']); // Detail kuis
+    Route::put('/quizzes/{id}', [QuizController::class, 'update']); // Perbarui kuis
+    Route::delete('/quizzes/{id}', [QuizController::class, 'destroy']); // Hapus kuis
+    Route::post('/courses/{courseId}/quizzes/{quizId}', [QuizController::class, 'submitAnswer']);
+
 });
