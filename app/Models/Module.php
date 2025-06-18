@@ -16,6 +16,10 @@ class Module extends Model
         'is_complete',
     ];
 
+    protected $casts = [
+        'is_complete' => 'boolean',
+    ];
+
     public function course()
     {
         return $this->belongsTo(Course::class);
