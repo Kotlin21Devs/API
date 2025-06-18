@@ -13,6 +13,7 @@ class Module extends Model
         'course_id',
         'title',
         'content',
+        'is_complete',
     ];
 
     public function course()
@@ -21,7 +22,7 @@ class Module extends Model
     }
 
     public function lessons()
-{
-    return $this->hasMany(Lesson::class);
-}
+    {
+        return $this->hasMany(Lesson::class);
+    }
 }

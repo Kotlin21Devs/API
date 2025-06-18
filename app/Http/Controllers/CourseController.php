@@ -52,6 +52,10 @@ class CourseController extends Controller
         }
 
         $result = $courses->map(function ($course) use ($enrolledCourseIds, $progressMap) {
+            $isCourseComplete = $course->modules->count() > 0 && $course->modules->every(function ($module) {
+                return $module->is_complete;
+            });
+
             return [
                 'id' => $course->id,
                 'title' => $course->title,
@@ -61,10 +65,47 @@ class CourseController extends Controller
                 'category' => $course->category,
                 'is_enrolled' => $enrolledCourseIds->contains($course->id),
                 'progress' => $enrolledCourseIds->contains($course->id) ? ($progressMap[$course->id] ?? 0) : null,
+                'is_complete' => $enrolledCourseIds->contains($course->id) ? $isCourseComplete : false,
+                'module_count' => $course->modules->count(),
+                'modules' => $course->modules->map(function ($module) {
+                    return [
+                        'id' => $module->id,
+                        'title' => $module->title,
+                        'is_complete' => $module->is_complete,
+                        'lessons' => $module->lessons->map(function ($lesson) {
+                            return [
+                                'id' => $lesson->id,
+                                'title' => $lesson->title,
+                                'duration' => $lesson->duration ?? '0 menit',
+                            ];
+                        }),
+                    ];
+                }),
             ];
         });
 
         return response()->json($result);
+    }
+
+    // Menandai module sebagai selesai
+    public function markComplete($module_id)
+    {
+        $user = auth()->user();
+        $module = Module::findOrFail($module_id);
+
+        // Cek apakah user terdaftar di course yang terkait dengan module
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->where('course_id', $module->course_id)
+            ->first();
+
+        if (!$enrollment) {
+            return response()->json(['message' => 'Anda belum terdaftar di kursus ini.'], 403);
+        }
+
+        // Tandai module sebagai selesai
+        $module->update(['is_complete' => true]);
+
+        return response()->json(['message' => 'Module berhasil ditandai sebagai selesai.']);
     }
 
     // Endpoint: GET /api/my-course
@@ -76,7 +117,6 @@ class CourseController extends Controller
             ->where('user_id', $user->id)
             ->get()
             ->sortBy(function ($enrollment) use ($user) {
-                // Hitung progress
                 $totalLessons = $enrollment->course->modules->flatMap->lessons->count();
                 $completedLessons = $user->lessonProgress()
                     ->whereIn('lesson_id', $enrollment->course->modules->flatMap->lessons->pluck('id'))
@@ -118,7 +158,7 @@ class CourseController extends Controller
             'title' => $course->title,
             'progress' => $progress,
             'next_lesson' => $nextLesson,
-            'thumbnail_url' => $course->thumbnail_url, // Menambahkan thumbnail
+            'thumbnail_url' => $course->thumbnail_url,
         ]);
     }
 
@@ -176,17 +216,18 @@ class CourseController extends Controller
             'id' => $course->id,
             'title' => $course->title,
             'description' => $course->description,
-            'thumbnail_url' => $course->thumbnail_url, // Menambahkan thumbnail
-            'category' => $course->category, // Menambahkan kategori
+            'thumbnail_url' => $course->thumbnail_url,
+            'category' => $course->category,
             'modules' => $course->modules->map(function ($module) {
                 return [
                     'id' => $module->id,
                     'title' => $module->title,
+                    'is_complete' => $module->is_complete,
                     'lessons' => $module->lessons->map(function ($lesson) {
                         return [
                             'id' => $lesson->id,
                             'title' => $lesson->title,
-                            'duration' => $lesson->duration ?? '0 menit', // pastikan field ini ada ya
+                            'duration' => $lesson->duration ?? '0 menit',
                         ];
                     }),
                 ];
