@@ -61,11 +61,10 @@ class CourseController extends Controller
                 'title' => $course->title,
                 'description' => $course->description,
                 'thumbnail_url' => $course->thumbnail_url,
-                'rating' => $course->rating,
                 'category' => $course->category,
+                'is_complete' => $enrolledCourseIds->contains($course->id) ? $isCourseComplete : false,
                 'is_enrolled' => $enrolledCourseIds->contains($course->id),
                 'progress' => $enrolledCourseIds->contains($course->id) ? ($progressMap[$course->id] ?? 0) : null,
-                'is_complete' => $enrolledCourseIds->contains($course->id) ? $isCourseComplete : false,
                 'module_count' => $course->modules->count(),
                 'modules' => $course->modules->map(function ($module) {
                     return [
@@ -208,9 +207,16 @@ class CourseController extends Controller
     }
 
     // Menampilkan detail kursus
-    public function show($id)
+    public function show($id, Request $request)
     {
+        $user = $request->user();
         $course = Course::with('modules.lessons')->findOrFail($id);
+
+        $enrolledCourseIds = Enrollment::where('user_id', $user->id)->pluck('course_id');
+
+        $isCourseComplete = $course->modules->count() > 0 && $course->modules->every(function ($module) {
+            return $module->is_complete;
+        });
 
         $response = [
             'id' => $course->id,
@@ -218,6 +224,8 @@ class CourseController extends Controller
             'description' => $course->description,
             'thumbnail_url' => $course->thumbnail_url,
             'category' => $course->category,
+            'is_complete' => $enrolledCourseIds->contains($course->id) ? $isCourseComplete : false,
+            'module_count' => $course->modules->count(),
             'modules' => $course->modules->map(function ($module) {
                 return [
                     'id' => $module->id,
