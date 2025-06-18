@@ -35,7 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/lessons', [LessonController::class, 'index']); // Daftar semua lesson (dikelompokkan per course)
     Route::get('/courses/{course_id}/lessons', [LessonController::class, 'byCourse']); // Daftar lesson untuk course tertentu
     Route::get('/lessons/{lesson_id}', [LessonController::class, 'show']); // Detail lesson
-    Route::post('/lessons/{lesson_id}/mark-complete', [LessonController::class, 'markComplete']); // Tandai lesson selesai
+
+    // Module
+    Route::post('/module/{module_id}/mark-complete', [CourseController::class, 'markComplete']); // Tandai module selesai
 
     // Progress
     Route::get('/progress', [ProgressController::class, 'index']); // Progres user
@@ -47,5 +49,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/quizzes/{id}', [QuizController::class, 'update']); // Perbarui kuis
     Route::delete('/quizzes/{id}', [QuizController::class, 'destroy']); // Hapus kuis
     Route::post('/courses/{courseId}/quizzes/{quizId}', [QuizController::class, 'submitAnswer']);
-
 });
