@@ -35,6 +35,7 @@ class LessonController extends Controller
                             'title' => $module->title,
                             'content' => $module->content,
                             'order' => $module->order ?? 0,
+                            'is_complete' => $module->is_complete,
                             'lessons' => $module->lessons->map(function ($lesson) {
                                 return [
                                     'id' => $lesson->id,
@@ -76,6 +77,7 @@ class LessonController extends Controller
                     'title' => $module->title,
                     'content' => $module->content,
                     'order' => $module->order ?? 0,
+                    'is_complete' => $module->is_complete,
                     'lessons' => $module->lessons->map(function ($lesson) {
                         return [
                             'id' => $lesson->id,
@@ -177,6 +179,7 @@ class LessonController extends Controller
                     'title' => $module->title,
                     'content' => $module->content,
                     'order' => $module->order ?? 0,
+                    'is_complete' => $module->is_complete,
                     'lessons' => $module->lessons->map(function ($l) {
                         return [
                             'id' => $l->id,
